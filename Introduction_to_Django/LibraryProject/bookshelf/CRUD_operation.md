@@ -13,9 +13,10 @@ book
 
 '''python
 from bookshelf.models import Book
-Book.objects.all().values()
+Book.objects.get(title="1984")
+book
 
-# Output: [{'id': 1, 'title': '1984', 'author': 'George Orwell', 'publication_year': 1949}]
+Output: <Book: 1984>
 
 # Update
 
@@ -30,7 +31,11 @@ book
 # Delete
 
 '''python
+book = Book.objects.get(title="Nineteen Eighty-Four")
 Book.delete()
+
+# Confirm Deletion
+
 Book.objects.all()
 
-# Output: (1, {'bookshelf.Book': 1}) and then an empty Queryset[]
+# Output: <Queryset []>
