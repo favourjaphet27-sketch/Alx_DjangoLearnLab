@@ -13,7 +13,7 @@ book
 
 '''python
 from bookshelf.models import Book
-Book.objects.get(title="1984")
+Book.objects.get
 book
 
 Output: <Book: 1984>
@@ -21,7 +21,7 @@ Output: <Book: 1984>
 # Update
 
 '''python
-book = Book.objects.get(title='1984')
+book = Book.objects.get(title="1984")
 book.title = "Nineteen Eighty-Four"
 book.save()
 book
