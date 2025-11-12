@@ -21,16 +21,15 @@ urlpatterns = [
     path("add_book/", add_book, name="add_book"),
     path("edit_book/<int:pk>/", edit_book, name="edit_book"),
     path("delete_book/<int:pk>/", delete_book, name="delete_book"),
+    
     # Authentication views
     path("register/", register, name="register"),
     path(
         "login/",
-        UserLoginView.as_view(template_name="relationship_app/login.html"),
-    ),
+        UserLoginView.as_view(), name='login'),
     path(
         "logout/",
-        UserLogoutView.as_view(template_name="relationship_app/logout.html"),
-    ),
+        UserLogoutView.as_view(), name='logout'),
     # role based views
     path("admin/", admin_view, name="admin_view"),
     path("librarian/", librarian_view, name="librarian_view"),
