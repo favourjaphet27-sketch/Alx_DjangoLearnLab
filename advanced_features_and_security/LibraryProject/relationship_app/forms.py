@@ -1,10 +1,25 @@
 from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import get_user_model
 
-class UserRegisterForm(UserCreationForm):
-    email = forms.EmailField(required=True)
 
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password1', 'password2']
+def get_user_creation_form():
+    # lazy import to avoid triggering get_user_model() at import time
+    from django.contrib.auth.forms import UserCreationForm
+
+    class CustomUserCreationForm(UserCreationForm):
+        pass
+
+    return CustomUserCreationForm
+
+
+def get_user_register_form():
+    UserCreationForm = get_user_creation_form()
+
+    class UserRegisterForm(UserCreationForm):
+        email = forms.EmailField(required=True)
+
+        class Meta(UserCreationForm.Meta):
+            model = get_user_model()
+            fields = ["username", "email", "password1", "password2"]
+
+    return UserRegisterForm
