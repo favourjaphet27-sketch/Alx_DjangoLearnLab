@@ -1,0 +1,8 @@
+<!DOCTYPE html>
+<html>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Create Book</button>
+    </form>
+</html>
