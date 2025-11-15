@@ -1,0 +1,6 @@
+<!DOCTYPE html>
+<html>
+    {% for book in books %}
+    <li>{{ book.title }} {{ book.author }} {{ book.publication_year }}</li>
+    {% csrf_token %}
+</html>
