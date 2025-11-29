@@ -4,7 +4,7 @@ from django.urls import reverse
 from api.models import Book
 
 
-class BookAPITestCase(APITestCase):
+class TestBookAPI(APITestCase):
     def setUp(self):
         # Create two books for testing
         self.book1 = Book.objects.create(
@@ -17,7 +17,7 @@ class BookAPITestCase(APITestCase):
         )
 
         self.list_url = reverse("book-list")
-        self.detail_url = reverse("book-detail", args=[self.book1.id])
+        self.create_url = reverse("book-create")
 
     def test_list_books(self):
         response = self.client.get(self.list_url)
