@@ -1,5 +1,5 @@
 """
-URL configuration for api_project project.
+URL configuration for advanced_api_project project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -16,16 +16,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
-from rest_framework.authtoken.views import obtain_auth_token
-
-
+from django.urls import path
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("api/", include("api.urls")),    
-    # Token authentication endpoint:
-    # Clients send username and password here to receive an auth token.
-    path('api/token', obtain_auth_token, name='api_token_auth'),
-
 ]
