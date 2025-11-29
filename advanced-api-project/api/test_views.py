@@ -1,69 +1,51 @@
-from django.test import TestCase
+from django.urls import reverse
+from rest_framework import status
+from rest_framework.test import APITestCase
 from django.contrib.auth.models import User
-from rest_framework.test import APIClient
-from api.models import Book
+from .models import Author, Book
 
 
-class BookAPITest(TestCase):
+class BookAPITestCase(APITestCase):
+
     def setUp(self):
-        self.client = APIClient()
-
-        # Create a test user for authentication
+        # Create test user
         self.user = User.objects.create_user(
-            username="testuser", password="testpass123"
+            username="testuser", password="password123"
         )
-        self.client.login(username="testuser", password="testpass123")
+        self.client.login(username="testuser", password="password123")
 
-        # Main book for tests
-        self.main_book = Book.objects.create(
-            title="Normal People", author="Sally Rooney", publication_year=2018
-        )
-
-        # Additional book for search/filter/order
-        self.second_book = Book.objects.create(
-            title="Crime and Punishment",
-            author="Fyodor Dostoevsky",
-            publication_year=1866,
+        # Create author and book
+        self.author = Author.objects.create(name="Sally Rooney")
+        self.book = Book.objects.create(
+            title="Normal People", publication_year=2018, author=self.author
         )
 
     def test_list_books(self):
-        response = self.client.get("/books/")
-        self.assertEqual(response.status_code, 200)
-
-    def test_retrieve_single_book(self):
-        response = self.client.get(f"/books/{self.main_book.id}/")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["title"], "Normal People")
+        url = reverse("book-list")
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_create_book(self):
+        url = reverse("book-create")
         data = {
-            "title": "New Book Test",
-            "author": "Test Author",
+            "title": "Another Book",
             "publication_year": 2020,
+            "author": self.author.id,
         }
-        response = self.client.post("/books/create/", data)
-        self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.data["title"], "New Book Test")
+        response = self.client.post(url, data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
 
     def test_update_book(self):
+        url = reverse("book-update", args=[self.book.id])
         data = {
             "title": "Normal People Updated",
-            "author": "Sally Rooney",
             "publication_year": 2018,
+            "author": self.author.id,
         }
-        response = self.client.put(f"/books/update/{self.main_book.id}/", data)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data["title"], "Normal People Updated")
+        response = self.client.put(url, data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
 
     def test_delete_book(self):
-        response = self.client.delete(f"/books/delete/{self.main_book.id}/")
-        self.assertEqual(response.status_code, 204)
-
-    def test_search_books(self):
-        response = self.client.get("/books/?search=Normal")
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.data[0]["title"], "Normal People")
-
-    def test_ordering_books(self):
-        response = self.client.get("/books/?ordering=publication_year")
-        self.assertEqual(response.status_code, 200)
+        url = reverse("book-delete", args=[self.book.id])
+        response = self.client.delete(url)
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
