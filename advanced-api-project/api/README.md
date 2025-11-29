@@ -14,15 +14,3 @@ Only authenticated users can write data.
 
 DeleteView
 Standard delete behavior, restricted to authenticated users only.
-
-Custom Hooks
-
-The project uses these DRF hooks:
-
-perform_create
-Runs after serializer validation but before saving.
-Useful for extra validation or attaching extra data.
-
-perform_update
-Works the same way but during updates.
-This project uses it to apply custom permission logic.
