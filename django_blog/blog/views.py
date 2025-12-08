@@ -3,17 +3,34 @@ from django.contrib import messages
 from django.contrib.auth import login
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView, LogoutView
-from django.views.generic import FormView, View
+from django.views.generic import (
+    FormView,
+    View,
+    ListView,
+    DetailView,
+    CreateView,
+    UpdateView,
+    DeleteView,
+)
 from django.urls import reverse_lazy
+from django.contrib.auth.mixins import UserPassesTestMixin
+from django.contrib.messages.views import SuccessMessageMixin
 
-from .forms import UserRegistrationForm, UserUpdateForm, ProfileUpdateForm
-from .models import Profile
+from .forms import (
+    UserRegistrationForm,
+    UserUpdateForm,
+    ProfileUpdateForm,
+    PostCreationForm,
+    PostUpdateForm,
+)
+from .models import Profile, Post
 
 
 class RegisterView(FormView):
     template_name = "blog/register.html"
     form_class = UserRegistrationForm
     success_url = reverse_lazy("blog:profile")
+    http_method_names = ["get", "post"]
 
     def form_valid(self, form):
         # save user, log them in, show a message
@@ -22,10 +39,16 @@ class RegisterView(FormView):
         messages.success(self.request, "Registration successful!")
         return super().form_valid(form)
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["method"] = self.request.method
+        return context
+
 
 class ProfileView(LoginRequiredMixin, View):
     template_name = "blog/profile.html"
-    login_url = reverse_lazy("login")
+    login_url = reverse_lazy("blog:login")
+    http_method_names = ["get", "post"]
 
     def get(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, user=request.user)
@@ -34,7 +57,12 @@ class ProfileView(LoginRequiredMixin, View):
         return render(
             request,
             self.template_name,
-            {"u_form": u_form, "p_form": p_form, "profile": profile},
+            {
+                "u_form": u_form,
+                "p_form": p_form,
+                "profile": profile,
+                "method": request.method,
+            },  # <-- include method
         )
 
     def post(self, request, *args, **kwargs):
@@ -50,7 +78,12 @@ class ProfileView(LoginRequiredMixin, View):
         return render(
             request,
             self.template_name,
-            {"u_form": u_form, "p_form": p_form, "profile": profile},
+            {
+                "u_form": u_form,
+                "p_form": p_form,
+                "profile": profile,
+                "method": request.method,
+            },
         )
 
 
@@ -60,3 +93,61 @@ class UserLoginView(LoginView):
 
 class UserLogoutView(LogoutView):
     template_name = "blog/logout.html"
+
+
+class PostDetailView(DetailView):
+    model = Post
+    template_name = "blog/postdetail.html"
+    context_object_name = "post"
+
+    def get_queryset(self):
+        # fetches author in same query
+        return super().get_queryset().select_related("author")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # provide recent posts for sidebar or related lists
+        context["recent_posts"] = Post.objects.order_by("-published_date")[:5]
+        return context
+
+
+class PostListView(ListView):
+    model = Post
+    template_name = "blog/postlist.html"
+    context_object_name = "posts"
+    paginate_by = 10
+    queryset = Post.objects.select_related("author").order_by("-published_date")
+
+
+class PostCreateView(LoginRequiredMixin, SuccessMessageMixin, CreateView):
+    model = Post
+    form_class = PostCreationForm
+    template_name = "blog/newpost.html"
+    success_url = reverse_lazy("blog:post-list")
+    success_message = "Post created successfully."
+
+    def form_valid(self, form):
+        form.instance.author = self.request.user
+        return super().form_valid(form)
+
+
+class PostUpdateView(
+    LoginRequiredMixin, UserPassesTestMixin, SuccessMessageMixin, UpdateView
+):
+    model = Post
+    form_class = PostUpdateForm
+    template_name = "blog/editpost.html"
+    success_url = reverse_lazy("blog:post-list")
+    success_message = "Post updated successfully."
+
+    def test_func(self):
+        return self.get_object().author == self.request.user
+
+
+class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Post
+    template_name = "blog/post_confirm_delete.html"
+    success_url = reverse_lazy("blog:post-list")
+
+    def test_func(self):
+        return self.get_object().author == self.request.user

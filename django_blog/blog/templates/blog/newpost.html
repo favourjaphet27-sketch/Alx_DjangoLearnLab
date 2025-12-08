@@ -1,0 +1,12 @@
+{% extends 'blog/base.html' %}
+{% block title %}New Post{% endblock %}
+
+{% block content %}
+<h1>Create Post</h1>
+<form method="post" novalidate>
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit" class="btn primary">Publish</button>
+  <a class="btn" href="{% url 'blog:post-list' %}">Cancel</a>
+</form>
+{% endblock %}
