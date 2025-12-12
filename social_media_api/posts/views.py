@@ -6,6 +6,7 @@ from django_filters.rest_framework import DjangoFilterBackend
 from django.shortcuts import get_object_or_404
 from .models import Post, Comment
 from .permissions import IsOwnerOrReadOnly
+from rest_framework.decorators import action
 
 
 # Create your views here.
@@ -16,12 +17,7 @@ class StandardResultsSetPagination(PageNumberPagination):
 
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = (
-        Post.objects.select_related("author")
-        .prefetch_related("comments")
-        .all()
-        .order_by("-created_at")
-    )
+    queryset = Post.objects.all()
     serializer_class = PostSerializer
     permissions_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     pagination_class = StandardResultsSetPagination
@@ -37,11 +33,30 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    @action(
+        detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated]
+    )
+    def feed(self, request):
+        """
+        Return posts from users the current user is following, newest first.
+        Paginated using the viewset pagination class.
+        """
+        following_users = request.user.following.all()
+        qs = Post.objects.filter(author__in=following_users).order_by("-created_at")
+
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(
+                page, many=True, context={"request": request}
+            )
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True, context={"request": request})
+        return Response(serializer.data)
+
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = (
-        Comment.objects.select_related("author", "post").all().order_by("created_at")
-    )
+    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly]
     pagination_class = StandardResultsSetPagination

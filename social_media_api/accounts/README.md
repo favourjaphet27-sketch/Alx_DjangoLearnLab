@@ -53,7 +53,15 @@ A concise guide to the accounts app: setup, registering users, authentication, a
 - Use Django messages to show success/error feedback.
 - In production, serve media files with a proper storage backend and configure `STATIC_ROOT`/`collectstatic`.
 
-If you want, I can:
+## Endpoints for following
 
-- generate example `urls.py` entries and minimal templates for register/login/profile,
-- or adapt this README to match exact URL names and model fields in your app.
+Follow / Unfollow
+
+- POST /auth/follow/<user_id>/ -> follow user
+- POST /auth/unfollow/<user_id>/ -> unfollow user
+- GET /auth/following/ -> list users you follow
+
+Feed
+
+- GET /api/posts/feed/ -> paginated posts from users you follow, newest first
+  Authorization: Token <token>
