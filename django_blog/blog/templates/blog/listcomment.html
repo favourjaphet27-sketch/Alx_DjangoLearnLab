@@ -1,0 +1,35 @@
+{% extends 'blog/base.html' %}
+{% block title %}Comments{% endblock %}
+
+{% block content %}
+  <h2>Comments</h2>
+
+  {% if comments %}
+    <ul class="comment-list">
+      {% for comment in comments %}
+        <li class="comment-item">
+          <p class="meta"><strong>{{ comment.author.username }}</strong> • {{ comment.created_at|date:"M j, Y, g:ia" }}</p>
+          <div class="content">{{ comment.content|linebreaks }}</div>
+
+          {% if request.user.is_authenticated and comment.author == request.user %}
+            <p class="actions">
+              {# edit/delete use your comment-update/comment-delete routes which take post_id;
+                 pass the comment id as a query param so the view can locate the comment #}
+              <a href="{% url 'blog:comment-update' post_id=post_pk|default:comment.post.pk %}?comment_id={{ comment.pk }}">Edit</a>
+              |
+              <a href="{% url 'blog:comment-delete' post_id=post_pk|default:comment.post.pk %}?comment_id={{ comment.pk }}">Delete</a>
+            </p>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>No comments yet.</p>
+  {% endif %}
+
+  {% comment %}
+    Create link uses the comment-create url which expects post_id in the path.
+    Ensure the view provides post_pk (or post_pk context variable) when rendering this template.
+  {% endcomment %}
+  <p><a class="btn" href="{% url 'blog:comment-create' post_id=post_pk|default:comments.0.post.pk %}">Add comment</a></p>
+{% endblock %}

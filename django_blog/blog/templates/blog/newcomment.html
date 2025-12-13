@@ -1,0 +1,13 @@
+{% extends 'blog/base.html' %}
+{% block title %}Add Comment{% endblock %}
+
+{% block content %}
+  <h2>Add Comment</h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Post comment</button>
+    <a class="btn" href="javascript:history.back()">Cancel</a>
+  </form>
+{% endblock %}

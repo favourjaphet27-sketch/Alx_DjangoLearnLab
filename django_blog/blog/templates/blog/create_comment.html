@@ -1,0 +1,14 @@
+{% extends 'blog/base.html' %}
+{% block title %}Add Comment{% endblock %}
+
+{% block content %}
+  <h2>Add Comment</h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn">Post comment</button>
+    {# back to the post detail; post detail expects pk #}
+    <a class="btn" href="{% url 'blog:post-detail' pk=post_pk %}">Back to post</a>
+  </form>
+{% endblock %}
