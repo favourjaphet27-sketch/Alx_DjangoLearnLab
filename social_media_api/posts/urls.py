@@ -12,3 +12,4 @@ urlpatterns = [
     path("<int:pk>/like/", LikePostView.as_view(), name="like-post"),
     path("<int:pk>/unlike/", UnlikePostView.as_view(), name="unlike-post"),
 ]
+

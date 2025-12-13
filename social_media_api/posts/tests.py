@@ -1,4 +1,3 @@
-from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from rest_framework import status
@@ -36,3 +35,25 @@ class PostCommentAPITest(APITestCase):
         self.client.force_authenticate(user=other)
         del_resp = self.client.delete(f'/api/comments/{response.data["id"]}/')
         self.assertEqual(del_resp.status_code, status.HTTP_403_FORBIDDEN)
+
+
+class FeedTests(APITestCase):
+    def setUp(self):
+        self.u1 = User.objects.create_user(username="u1", password="p")
+        self.u2 = User.objects.create_user(username="u2", password="p2")
+        Post.objects.create(author=self.u2, title="hi", content="x")
+        # login as u1 and follow u2
+        resp = self.client.post(
+            "/auth/login/", {"username": "u1", "password": "p"}, format="json"
+        )
+        token = resp.data.get("token")
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {token}")
+        self.client.post(f"/auth/follow/{self.u2.id}/")
+
+    def test_feed_contains_followed_post(self):
+        r = self.client.get("/api/posts/feed/")
+        self.assertEqual(r.status_code, 200)
+        data = r.data
+        # if paginated, data['results']; else data is list
+        results = data.get("results", data)
+        self.assertTrue(any(item["title"] == "hi" for item in results))
