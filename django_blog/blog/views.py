@@ -23,7 +23,7 @@ from .forms import (
     PostCreationForm,
     PostUpdateForm,
 )
-from .models import Profile, Post
+from .models import Profile, Post, Comment
 
 
 class RegisterView(FormView):
@@ -62,7 +62,7 @@ class ProfileView(LoginRequiredMixin, View):
                 "p_form": p_form,
                 "profile": profile,
                 "method": request.method,
-            },  # <-- include method
+            },
         )
 
     def post(self, request, *args, **kwargs):
@@ -151,3 +151,16 @@ class PostDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.get_object().author == self.request.user
+    
+
+class CommentListView(ListView):
+    model = Comment
+    template_name = 'blog/list_comment.html'
+    queryset = Comment.objects.all()
+
+class NewCommentView(CreateView):
+    model = Comment
+    template_name = 'blog/create_comment.html'
+    queryset = Comment.Objects.all()
+    permission = []
+

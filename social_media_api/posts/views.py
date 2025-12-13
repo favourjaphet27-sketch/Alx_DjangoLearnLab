@@ -1,12 +1,12 @@
-from django.shortcuts import render
 from .serializers import CommentSerializer, PostSerializer
-from rest_framework import permissions, viewsets, filters
+from rest_framework import permissions, viewsets, filters, generics, status
 from rest_framework.pagination import PageNumberPagination
 from django_filters.rest_framework import DjangoFilterBackend
-from django.shortcuts import get_object_or_404
-from .models import Post, Comment
+from .models import Post, Comment, Like
 from .permissions import IsOwnerOrReadOnly
-from rest_framework.decorators import action
+from django.contrib.contenttypes.models import ContentType
+from notifications.models import Notification
+from rest_framework.response import Response
 
 
 # Create your views here.
@@ -33,27 +33,6 @@ class PostViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    @action(
-        detail=False, methods=["get"], permission_classes=[permissions.IsAuthenticated]
-    )
-    def feed(self, request):
-        """
-        Return posts from users the current user is following, newest first.
-        Paginated using the viewset pagination class.
-        """
-        following_users = request.user.following.all()
-        qs = Post.objects.filter(author__in=following_users).order_by("-created_at")
-
-        page = self.paginate_queryset(qs)
-        if page is not None:
-            serializer = self.get_serializer(
-                page, many=True, context={"request": request}
-            )
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(qs, many=True, context={"request": request})
-        return Response(serializer.data)
-
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
@@ -69,3 +48,56 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+
+class FeedView(generics.ListAPIView):
+    serializer_class = PostSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        following_ids = user.following.values_list("id", flat=True)
+        return Post.objects.filter(author_id__in=following_ids).order_by("-created_at")
+
+
+class LikePostView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response(
+                {"detail": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
+
+        if not created:
+            return Response({"detail": "You already liked this post"}, status=400)
+
+        # create notification
+        Notification.objects.create(
+            recipient=post.author,
+            author=request.user,
+            verb="liked your post",
+            target=post,
+        )
+
+        return Response({"detail": "Post Liked"}, status=200)
+
+
+class UnlikePostView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            post = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response({"detail": "Post not found"}, status=404)
+
+        deleted, _ = Like.objects.filter(user=request.user, post=post).delete()
+
+        if deleted:
+            return Response({"detail": "Like removed"}, status=200)
+        return Response({"detail": "You haven't liked this post"}, status=400)

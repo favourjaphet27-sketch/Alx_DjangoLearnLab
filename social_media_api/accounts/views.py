@@ -2,14 +2,12 @@ from django.shortcuts import get_object_or_404
 from .serializers import RegistrationSerializer, LoginSerializer, UserSerializer
 from django.contrib.auth import authenticate, get_user_model
 from rest_framework.views import APIView
-from rest_framework import status, permissions
+from rest_framework import status, permissions, generics
 from rest_framework.authtoken.models import Token
 from rest_framework.response import Response
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-
-# Create your views here.
-User = get_user_model()
+from .models import CustomUser
 
 
 class RegisterView(APIView):
@@ -60,43 +58,36 @@ class LoginView(APIView):
         )
 
 
-class FollowUserView(APIView):
+class FollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()
 
     def post(self, request, user_id):
-        if request.user.id == user_id:
+        try:
+            user_to_follow = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
             return Response(
-                {"detail": "You can't follow yourself."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
-        target = get_object_or_404(User, id=user_id)
-        request.user.following.add(target)
-        request.user.save()
-        data = {
-            "following_count": request.user.following.count(),
-            "followers_count_target": target.followers.count(),
-        }
-        return Response(data, status=status.HTTP_200_OK)
+
+        request.user.following.add(user_to_follow)
+        return Response({"detail": "Followed successfully"})
 
 
-class UnfollowUserView(APIView):
+class UnfollowUserView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    queryset = CustomUser.objects.all()
 
     def post(self, request, user_id):
-        if request.user.id == user_id:
+        try:
+            user_to_unfollow = CustomUser.objects.get(id=user_id)
+        except CustomUser.DoesNotExist:
             return Response(
-                {"detail": "You can't unfollow yourself."},
-                status=status.HTTP_400_BAD_REQUEST,
+                {"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND
             )
 
-        target = get_object_or_404(User, id=user_id)
-        request.user.following.remove(target)
-        request.user.save()
-        data = {
-            "following_count": request.user.following.count(),
-            "followers_count_target": target.followers.count(),
-        }
-        return Response(data, status=status.HTTP_200_OK)
+        request.user.following.remove(user_to_unfollow)
+        return Response({"detail": "Unfollowed successfully"})
 
 
 class UserFollowingList(APIView):
