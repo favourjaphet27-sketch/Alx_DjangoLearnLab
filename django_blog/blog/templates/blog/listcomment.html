@@ -13,11 +13,9 @@
 
           {% if request.user.is_authenticated and comment.author == request.user %}
             <p class="actions">
-              {# edit/delete use your comment-update/comment-delete routes which take post_id;
-                 pass the comment id as a query param so the view can locate the comment #}
-              <a href="{% url 'blog:comment-update' post_id=post_pk|default:comment.post.pk %}?comment_id={{ comment.pk }}">Edit</a>
+              <a href="{% url 'blog:comment-edit' comment.pk %}">Edit</a>
               |
-              <a href="{% url 'blog:comment-delete' post_id=post_pk|default:comment.post.pk %}?comment_id={{ comment.pk }}">Delete</a>
+              <a href="{% url 'blog:comment-delete' comment.pk %}">Delete</a>
             </p>
           {% endif %}
         </li>
@@ -27,9 +25,5 @@
     <p>No comments yet.</p>
   {% endif %}
 
-  {% comment %}
-    Create link uses the comment-create url which expects post_id in the path.
-    Ensure the view provides post_pk (or post_pk context variable) when rendering this template.
-  {% endcomment %}
-  <p><a class="btn" href="{% url 'blog:comment-create' post_id=post_pk|default:comments.0.post.pk %}">Add comment</a></p>
+  <p><a class="btn" href="{% url 'blog:comment-create' post_pk=post_pk|default:comments.0.post.pk %}">Add comment</a></p>
 {% endblock %}

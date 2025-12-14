@@ -80,10 +80,10 @@ WSGI_APPLICATION = "django_blog.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": os.environ.get("DB_NAME", "django_blog_db"),  # DB name, not a path
+        "NAME": os.environ.get("DB_NAME", "django_blog_db"),
         "USER": os.environ.get("DB_USER", "root"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "dbpassword"),
-        "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
+        "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "3306"),
     }
 }

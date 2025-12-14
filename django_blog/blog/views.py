@@ -166,6 +166,11 @@ class CommentListView(ListView):
             qs = qs.filter(post_id=post_pk)
         return qs
 
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["post_pk"] = self.kwargs.get("post_pk")
+        return ctx
+
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
@@ -184,11 +189,17 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
-    fields = ["body"]
+    fields = ["content"]  # <-- unified field name
     template_name = "blog/edit_comment.html"
 
     def test_func(self):
         return self.get_object().author == self.request.user
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["post_pk"] = self.object.post.pk
+        ctx["comment"] = self.object
+        return ctx
 
     def get_success_url(self):
         return reverse("blog:post-detail", kwargs={"pk": self.object.post.pk})
@@ -200,6 +211,12 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.get_object().author == self.request.user
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["post_pk"] = self.object.post.pk
+        ctx["comment"] = self.object
+        return ctx
 
     def get_success_url(self):
         return reverse("blog:post-detail", kwargs={"pk": self.object.post.pk})

@@ -32,13 +32,31 @@ class ProfileUpdateForm(forms.ModelForm):
         fields = ("image", "bio")
 
 
+class TagWidget(forms.TextInput):
+    """Simple tag input widget.
+
+    Renders as a normal text input but with a CSS hook and data attribute
+    so JavaScript tag pickers (if you add one later) can enhance it.
+    """
+
+    template_name = "django/forms/widgets/text.html"
+
+    def __init__(self, attrs=None):
+        default_attrs = {
+            "class": "form-control tag-widget",
+            "placeholder": "django, python",
+            "data-role": "tags",
+        }
+        if attrs:
+            default_attrs.update(attrs)
+        super().__init__(attrs=default_attrs)
+
+
 class PostForm(forms.ModelForm):
     tags = forms.CharField(
         required=False,
         help_text="Comma-separated tags (e.g. django, python). New tags will be created.",
-        widget=forms.TextInput(
-            attrs={"class": "form-control", "placeholder": "django, python"}
-        ),
+        widget=TagWidget(),
     )
 
     class Meta:
@@ -71,7 +89,6 @@ class PostForm(forms.ModelForm):
         return post
 
 
-# keep aliases used by your views
 class PostCreationForm(PostForm):
     class Meta(PostForm.Meta):
         pass
