@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "blog",
     "rest_framework",
+    "taggit",
 ]
 
 MIDDLEWARE = [
@@ -80,7 +81,7 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": os.environ.get("DB_NAME", "django_blog_db"),  # DB name, not a path
-        "USER": os.environ.get("DB_USER", "django_blog_db"),
+        "USER": os.environ.get("DB_USER", "root"),
         "PASSWORD": os.environ.get("DB_PASSWORD", "dbpassword"),
         "HOST": os.environ.get("DB_HOST", "127.0.0.1"),
         "PORT": os.environ.get("DB_PORT", "3306"),

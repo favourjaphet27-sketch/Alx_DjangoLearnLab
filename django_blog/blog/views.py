@@ -15,6 +15,7 @@ from django.views.generic import (
 from django.urls import reverse_lazy, reverse
 from django.contrib.auth.mixins import UserPassesTestMixin
 from django.contrib.messages.views import SuccessMessageMixin
+from django.db.models import Q
 
 from .forms import (
     UserRegistrationForm,
@@ -23,7 +24,7 @@ from .forms import (
     PostCreationForm,
     PostUpdateForm,
 )
-from .models import Profile, Post, Comment
+from .models import Profile, Post, Comment, Tag
 
 
 class RegisterView(FormView):
@@ -168,7 +169,7 @@ class CommentListView(ListView):
 
 class CommentCreateView(LoginRequiredMixin, CreateView):
     model = Comment
-    fields = ["body"]  # adjust if your Comment field name differs
+    fields = ["content"]
     template_name = "blog/create_comment.html"
 
     def form_valid(self, form):
@@ -202,3 +203,51 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def get_success_url(self):
         return reverse("blog:post-detail", kwargs={"pk": self.object.post.pk})
+
+
+class TagPostListView(ListView):
+    model = Post
+    template_name = "blog/postlist.html"
+    context_object_name = "posts"
+    paginate_by = 10
+
+    def get_queryset(self):
+        tag_name = self.kwargs.get("tag_name")
+        return (
+            Post.objects.filter(tags__name__iexact=tag_name)
+            .select_related("author")
+            .prefetch_related("tags")
+            .order_by("-published_date")
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["tag_name"] = self.kwargs.get("tag_name")
+        return ctx
+
+
+class SearchResultsView(ListView):
+    model = Post
+    template_name = "blog/search_results.html"
+    context_object_name = "posts"
+
+    def get_queryset(self):
+        q = self.request.GET.get("q", "").strip()
+        if not q:
+            return Post.objects.none()
+        return (
+            Post.objects.filter(
+                Q(title__icontains=q)
+                | Q(contents__icontains=q)
+                | Q(tags__name__icontains=q)
+            )
+            .distinct()
+            .select_related("author")
+            .prefetch_related("tags")
+            .order_by("-published_date")
+        )
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["query"] = self.request.GET.get("q", "")
+        return ctx
