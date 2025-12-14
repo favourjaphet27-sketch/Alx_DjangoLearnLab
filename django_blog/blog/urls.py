@@ -32,7 +32,7 @@ urlpatterns = [
     path("post/<int:pk>/delete/", PostDeleteView.as_view(), name="delete-post"),
     path("post/<int:post_pk>/comment/", CommentListView.as_view(), name="comment-list"),
     path(
-        "post/<int:post_pk>/comment/new/",
+        "post/<int:post_pk>/comments/new/",
         CommentCreateView.as_view(),
         name="comment-create",
     ),
