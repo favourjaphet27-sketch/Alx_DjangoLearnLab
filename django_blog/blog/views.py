@@ -189,7 +189,7 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
 
 class CommentUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Comment
-    fields = ["content"]  # <-- unified field name
+    fields = ["content"]
     template_name = "blog/edit_comment.html"
 
     def test_func(self):
@@ -255,7 +255,7 @@ class SearchResultsView(ListView):
         return (
             Post.objects.filter(
                 Q(title__icontains=q)
-                | Q(contents__icontains=q)
+                | Q(content__icontains=q)
                 | Q(tags__name__icontains=q)
             )
             .distinct()
