@@ -30,9 +30,9 @@ urlpatterns = [
     path("post/<int:pk>/", PostDetailView.as_view(), name="post-detail"),
     path("post/<int:pk>/edit/", PostUpdateView.as_view(), name="edit-post"),
     path("post/<int:pk>/delete/", PostDeleteView.as_view(), name="delete-post"),
-    path("post/<int:post_pk>/comment/", CommentListView.as_view(), name="comment-list"),
+    path("post/<int:pk>/comment/", CommentListView.as_view(), name="comment-list"),
     path(
-        "post/<int:post_pk>/comments/new/",
+        "post/<int:pk>/comments/new/",
         CommentCreateView.as_view(),
         name="comment-create",
     ),
