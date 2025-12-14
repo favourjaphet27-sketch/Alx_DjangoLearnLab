@@ -222,7 +222,7 @@ class CommentDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return reverse("blog:post-detail", kwargs={"pk": self.object.post.pk})
 
 
-class TagPostListView(ListView):
+class PostByTagListView(ListView):
     model = Post
     template_name = "blog/postlist.html"
     context_object_name = "posts"
